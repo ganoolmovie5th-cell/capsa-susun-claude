@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { GameState, Player, PlayerArrangement, TIMER_DURATION, AIDifficulty } from '../core/types';
+import { GameState, Player, PlayerArrangement, AIDifficulty } from '../core/types';
 import { deal } from '../core/deck';
 import { calculateRoundScores, computeRowComparison } from '../core/scoring';
 import { validateArrangement } from '../core/validation';
@@ -17,7 +17,7 @@ interface GameStore {
   newAchievement: string | null;
   soundEnabled: boolean;
   // Actions
-  newGame: (playerCount: number, aiCount: number, targetScore?: number, aiDifficulty?: AIDifficulty) => void;
+  newGame: (playerCount: number, aiCount: number, targetScore?: number, aiDifficulty?: AIDifficulty, timerDuration?: number) => void;
   nextRound: () => void;
   placeCards: (arrangement: PlayerArrangement) => void;
   autoArrange: () => void;
@@ -38,7 +38,7 @@ export const useGameStore = create<GameStore>()(
       newAchievement: null,
       soundEnabled: true,
 
-      newGame: (playerCount, aiCount, targetScore = 15, aiDifficulty = 'hard') => {
+      newGame: (playerCount, aiCount, targetScore = 15, aiDifficulty = 'hard', timerDuration = 60) => {
         const humanCount = playerCount - aiCount;
         const players: Player[] = [];
         for (let i = 0; i < humanCount; i++) {
@@ -59,7 +59,8 @@ export const useGameStore = create<GameStore>()(
             currentPlayerIndex: 0,
             phase: 'arranging',
             roundNumber: 1,
-            timer: TIMER_DURATION,
+            timer: timerDuration,
+            timerDuration,
             lastRoundScores: [],
             targetScore,
             matchWinner: null,
@@ -104,7 +105,8 @@ export const useGameStore = create<GameStore>()(
             currentPlayerIndex: 0,
             phase: 'arranging',
             roundNumber: state.roundNumber + 1,
-            timer: TIMER_DURATION,
+            timer: state.timerDuration,
+            timerDuration: state.timerDuration,
             lastRoundScores: [],
             matchWinner: null,
             rowComparison: null,
@@ -159,7 +161,7 @@ export const useGameStore = create<GameStore>()(
         }
 
         const nextP = state.players[nextIdx];
-        set({ state: { ...state, currentPlayerIndex: nextIdx, timer: TIMER_DURATION } });
+        set({ state: { ...state, currentPlayerIndex: nextIdx, timer: state.timerDuration } });
 
         if (nextP.isAI) {
           setTimeout(() => get().nextPlayer(), 300);

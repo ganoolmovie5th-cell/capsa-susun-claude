@@ -53,6 +53,7 @@ export interface GameState {
   phase: GamePhase;
   roundNumber: number;
   timer: number; // seconds remaining
+  timerDuration: number; // configurable per-turn duration
   lastRoundScores: number[];
   targetScore: number; // first to X points wins the match
   matchWinner: number | null; // player index or null
@@ -60,7 +61,7 @@ export interface GameState {
   rowComparison: RowComparison | null; // populated after scoring
 }
 
-export const TARGET_SCORE_OPTIONS = [10, 15, 20, 30] as const;
+export const TARGET_SCORE_OPTIONS = [10, 15, 20, 30] as const; // kept for reference
 
 // Theme colors
 export const THEME = {
@@ -80,7 +81,8 @@ export const THEME = {
   border: '#2d6b4a',
 } as const;
 
-export const TIMER_DURATION = 60; // seconds per turn
+export const TIMER_DURATION = 60; // default seconds per turn
+export const TIMER_OPTIONS = [30, 45, 60, 90, 120] as const;
 
 export type AIDifficulty = 'easy' | 'medium' | 'hard' | 'dewa';
 export const AI_DIFFICULTY_OPTIONS: AIDifficulty[] = ['easy', 'medium', 'hard', 'dewa'];
