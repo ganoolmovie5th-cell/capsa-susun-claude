@@ -46,8 +46,8 @@ Game kartu Capsa Susun (Chinese Poker) untuk mobile. 2-4 pemain hot-seat + Smart
 - **Validasi:** Bawah ≥ Tengah ≥ Atas (kekuatan poker hand)
 - **Scoring:** Bandingkan per baris antar semua pemain (+1/-1 per menang/kalah)
 - **Bonus:** Scoop (+3), Royal Flush bawah (+5), Four-of-a-kind bawah (+4), Straight Flush tengah (+4)
-- **Timer:** 60 detik per giliran; timeout = auto-arrange
-- **Multi-round:** Pertama sampai target skor (10/15/20/30) memenangkan match
+- **Timer:** 60 detik per giliran; timeout = auto-arrange (configurable 30/45/60/90/120s)
+- **Multi-round:** Pertama sampai target skor (slider 5–100) memenangkan match
 
 ---
 
@@ -100,7 +100,8 @@ Type: `feat` `fix` `refactor` `test` `chore` `docs`
 - Staggered delay per card saat reveal (80ms per card, 200ms per player)
 
 ### Multi-round (First to X)
-- `GameState.targetScore`: target poin (10/15/20/30), dipilih di HomeScreen
+- `GameState.targetScore`: slider range 5–100 poin, dipilih di HomeScreen
+- `GameState.timerDuration`: configurable (30/45/60/90/120s)
 - `GameState.matchWinner`: null sampai ada pemain >= targetScore
 - `GamePhase 'match-over'`: tampilkan pemenang + statistik
 - `nextRound()`: deal ulang, reset arrangement, pertahankan totalScore
@@ -111,6 +112,27 @@ Type: `feat` `fix` `refactor` `test` `chore` `docs`
 - 6 sounds: deal (800Hz), place (600Hz), flip (1200Hz), score (880Hz), win (1047Hz), lose (330Hz)
 - Toggle on/off di HomeScreen, preferensi di-persist
 - `expo-av` Audio.Sound.createAsync dari data URI base64
+
+### Bot AI Difficulty
+- 4 level: `easy` | `medium` | `hard` | `dewa` (dipilih di HomeScreen)
+- Easy: random valid arrangement, pick acak
+- Medium: limited search (500 bottom, 8 middle), pick dari top 3
+- Hard: full brute-force (1287 bottom, 20 middle), selalu best
+- Dewa: exhaustive (semua kombinasi middle = 56, tanpa early exit)
+- Config di `DIFFICULTY_CONFIGS` dalam `src/core/ai.ts`
+
+### Row Win/Lose Indicators
+- `computeRowComparison()` di `scoring.ts`: matrix W/L/T per baris antar pemain
+- Badge hijau (W), merah (L), abu (T) di samping setiap baris saat reveal
+- `GameState.rowComparison`: populated setelah `revealAndScore()`
+
+### UI HomeScreen (percantik)
+- Logo section besar + title + subtitle uppercase
+- Settings card grouped (rounded, bordered)
+- Target skor: custom slider (gesture handler) range 5–100
+- Waktu per giliran: chip picker (30/45/60/90/120s)
+- Summary strip horizontal (icons + dot separators)
+- Gold shadow pada tombol start
 
 ### Poker hand labels
 - `DropRow.tsx` mengevaluasi hand saat penuh (3 atau 5 kartu)

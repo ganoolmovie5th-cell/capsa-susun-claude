@@ -9,12 +9,14 @@ Game kartu Capsa Susun klasik untuk mobile. Susun 13 kartu menjadi 3 baris (3-5-
 - **Full rules** — poker hand ranking, validasi baris (bottom ≥ middle ≥ top), scoring
 - **Drag-and-drop** — seret kartu ke baris target, atau tap untuk auto-place
 - **Card flip animation** — kartu terungkap dengan animasi 3D flip saat reveal
-- **Multi-round** — first to X points (10/15/20/30) wins the match
+- **Multi-round** — first to X points (slider 5–100) wins the match
+- **Configurable timer** — pilih waktu per giliran (30s/45s/60s/90s/120s)
 - **Sound effects** — efek suara deal, place, flip, score, win/lose (toggle on/off)
-- **Timer** — 60 detik per giliran
+- **Timer** — configurable per giliran (30/45/60/90/120 detik)
 - **Auto-arrange** — AI bantu susun otomatis
 - **Poker hand labels** — tampil nama kombinasi di setiap baris saat penuh
-- **Scoring** — +1/-1 per baris, scoop bonus +3, bonus Royal Flush/Four-of-a-kind
+- **Bot AI difficulty** — 4 level: Easy, Medium, Hard, Dewa
+- **Row indicators** — badge W/L/T per baris saat reveal
 - **Statistics** — games played, win rate, best round, scoops
 - **12 Achievements** — milestone badges
 - **Casino theme** — dark green felt, gold accents, card shadows
@@ -92,16 +94,27 @@ Baris atas (3 kartu): hanya High Card, Pair, Three of a Kind.
 
 - Per baris menang: +1, kalah: -1
 - Scoop (menang 3 baris): +3 bonus
+- Scoop (menang 3 baris): +3 bonus
 - Royal Flush di bawah: +5
 - Four of a Kind di bawah: +4
 - Straight Flush di tengah: +4
 
 ## Multi-Round
 
-- Pilih target skor di HomeScreen (10, 15, 20, atau 30 poin)
+- Pilih target skor di HomeScreen via slider (5–100 poin)
+- Pilih waktu per giliran (30s / 45s / 60s / 90s / 120s)
 - Pemain pertama yang mencapai target skor memenangkan pertandingan
 - Total skor di-carry antar ronde
 - Match over = tampil pemenang + statistik
+
+## Bot AI Difficulty
+
+| Level | Strategi |
+|---|---|
+| Easy 🟢 | Cari beberapa arrangement valid, pilih acak |
+| Medium 🟡 | Search terbatas (500 bottom, 8 middle), pilih dari top 3 |
+| Hard 🔴 | Full brute-force (1287 bottom, 20 middle), selalu pilih terbaik |
+| Dewa 💀 | Exhaustive (semua kombinasi, tanpa early exit), selalu optimal |
 
 ## License
 
