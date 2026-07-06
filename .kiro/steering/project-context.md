@@ -47,6 +47,7 @@ Game kartu Capsa Susun (Chinese Poker) untuk mobile. 2-4 pemain hot-seat + Smart
 - **Scoring:** Bandingkan per baris antar semua pemain (+1/-1 per menang/kalah)
 - **Bonus:** Scoop (+3), Royal Flush bawah (+5), Four-of-a-kind bawah (+4), Straight Flush tengah (+4)
 - **Timer:** 60 detik per giliran; timeout = auto-arrange
+- **Multi-round:** Pertama sampai target skor (10/15/20/30) memenangkan match
 
 ---
 
@@ -61,7 +62,7 @@ Game kartu Capsa Susun (Chinese Poker) untuk mobile. 2-4 pemain hot-seat + Smart
 
 ## Persistence
 
-- Stats + achievements di-persist (key: `capsa-susun-store`)
+- Stats + achievements + soundEnabled di-persist (key: `capsa-susun-store`)
 - Game state transient (tidak di-persist antar session)
 
 ---
@@ -84,12 +85,45 @@ Type: `feat` `fix` `refactor` `test` `chore` `docs`
 
 ---
 
+## Fitur Baru (Juli 2026)
+
+### Drag-and-drop kartu
+- `src/components/DraggableCard.tsx`: Pan gesture (react-native-gesture-handler) + spring animation (reanimated)
+- Drop zones (`DropRow.tsx`) report Y position via `measureInWindow`
+- Tap fallback: auto-place ke baris berikutnya yang tersedia
+- Haptic feedback (expo-haptics) saat card placed
+
+### Card flip animation
+- `src/components/FlipCard.tsx`: 3D rotateY via reanimated interpolate
+- Back face: dark surface + gold ♠ pattern
+- Front face: white card + value/suit text
+- Staggered delay per card saat reveal (80ms per card, 200ms per player)
+
+### Multi-round (First to X)
+- `GameState.targetScore`: target poin (10/15/20/30), dipilih di HomeScreen
+- `GameState.matchWinner`: null sampai ada pemain >= targetScore
+- `GamePhase 'match-over'`: tampilkan pemenang + statistik
+- `nextRound()`: deal ulang, reset arrangement, pertahankan totalScore
+- `gamesPlayed`/`gamesWon` di-increment saat match selesai (bukan per ronde)
+
+### Sound effects
+- `src/core/sounds.ts`: procedural WAV generation (sine + decay) — tanpa file audio fisik
+- 6 sounds: deal (800Hz), place (600Hz), flip (1200Hz), score (880Hz), win (1047Hz), lose (330Hz)
+- Toggle on/off di HomeScreen, preferensi di-persist
+- `expo-av` Audio.Sound.createAsync dari data URI base64
+
+### Poker hand labels
+- `DropRow.tsx` mengevaluasi hand saat penuh (3 atau 5 kartu)
+- Label ditampilkan di kanan atas row (hijau accent)
+
+---
+
 ## Roadmap
 
-- [ ] Drag-and-drop kartu ke baris (gesture handler)
-- [ ] Card flip animation saat reveal
-- [ ] Visual poker hand labels di setiap baris
-- [ ] Multi-round game (first to X points)
-- [ ] Sound effects + haptic feedback
+- [x] Drag-and-drop kartu ke baris (gesture handler)
+- [x] Card flip animation saat reveal
+- [x] Visual poker hand labels di setiap baris
+- [x] Multi-round game (first to X points)
+- [x] Sound effects + haptic feedback
 - [ ] Online multiplayer (Supabase)
 - [ ] Spectator mode (0 human, 4 AI)

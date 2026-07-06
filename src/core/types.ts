@@ -45,7 +45,7 @@ export interface Player {
   totalScore: number;
 }
 
-export type GamePhase = 'dealing' | 'arranging' | 'revealing' | 'scoring' | 'game-over';
+export type GamePhase = 'dealing' | 'arranging' | 'revealing' | 'scoring' | 'game-over' | 'match-over';
 
 export interface GameState {
   players: Player[];
@@ -54,7 +54,11 @@ export interface GameState {
   roundNumber: number;
   timer: number; // seconds remaining
   lastRoundScores: number[];
+  targetScore: number; // first to X points wins the match
+  matchWinner: number | null; // player index or null
 }
+
+export const TARGET_SCORE_OPTIONS = [10, 15, 20, 30] as const;
 
 // Theme colors
 export const THEME = {

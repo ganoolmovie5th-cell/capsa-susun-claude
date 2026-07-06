@@ -1,21 +1,24 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { GameState, Player, PlayerArrangement, GamePhase, TIMER_DURATION, Card } from '../core/types';
+import { GameState, Player, PlayerArrangement, TIMER_DURATION } from '../core/types';
 import { deal } from '../core/deck';
 import { calculateRoundScores } from '../core/scoring';
 import { validateArrangement } from '../core/validation';
 import { findBestArrangement } from '../core/ai';
 import { Stats, defaultStats, checkNewAchievements } from '../core/achievements';
 import { evaluateHand5 } from '../core/poker';
+import { playSoundDeal, playSoundPlace, playSoundScore, playSoundWin, playSoundLose } from '../core/sounds';
 
 interface GameStore {
   state: GameState | null;
   stats: Stats;
   unlockedAchievements: string[];
   newAchievement: string | null;
+  soundEnabled: boolean;
   // Actions
-  newGame: (playerCount: number, aiCount: number) => void;
+  newGame: (playerCount: number, aiCount: number, targetScore?: number) => void;
+  nextRound: () => void;
   placeCards: (arrangement: PlayerArrangement) => void;
   autoArrange: () => void;
   nextPlayer: () => void;
@@ -23,6 +26,7 @@ interface GameStore {
   tickTimer: () => void;
   dismissAchievement: () => void;
   resetStats: () => void;
+  toggleSound: () => void;
 }
 
 export const useGameStore = create<GameStore>()(
@@ -32,8 +36,9 @@ export const useGameStore = create<GameStore>()(
       stats: { ...defaultStats },
       unlockedAchievements: [],
       newAchievement: null,
+      soundEnabled: true,
 
-      newGame: (playerCount, aiCount) => {
+      newGame: (playerCount, aiCount, targetScore = 15) => {
         const humanCount = playerCount - aiCount;
         const players: Player[] = [];
         for (let i = 0; i < humanCount; i++) {
@@ -46,6 +51,8 @@ export const useGameStore = create<GameStore>()(
         const hands = deal(playerCount);
         players.forEach((p, i) => { p.hand = hands[i]; });
 
+        if (get().soundEnabled) playSoundDeal();
+
         set({
           state: {
             players,
@@ -54,6 +61,8 @@ export const useGameStore = create<GameStore>()(
             roundNumber: 1,
             timer: TIMER_DURATION,
             lastRoundScores: [],
+            targetScore,
+            matchWinner: null,
           },
         });
 
@@ -71,11 +80,55 @@ export const useGameStore = create<GameStore>()(
         }, 500);
       },
 
+      nextRound: () => {
+        const { state, soundEnabled } = get();
+        if (!state) return;
+
+        // Keep totalScores, deal new hands
+        const hands = deal(state.players.length);
+        const players = state.players.map((p, i) => ({
+          ...p,
+          hand: hands[i],
+          arrangement: null,
+          score: 0,
+        }));
+
+        if (soundEnabled) playSoundDeal();
+
+        set({
+          state: {
+            ...state,
+            players,
+            currentPlayerIndex: 0,
+            phase: 'arranging',
+            roundNumber: state.roundNumber + 1,
+            timer: TIMER_DURATION,
+            lastRoundScores: [],
+            matchWinner: null,
+          },
+        });
+
+        // AI auto-arrange
+        setTimeout(() => {
+          const { state: s } = get();
+          if (!s) return;
+          const updatedPlayers = s.players.map((p) => {
+            if (p.isAI && !p.arrangement) {
+              return { ...p, arrangement: findBestArrangement(p.hand) };
+            }
+            return p;
+          });
+          set({ state: { ...s, players: updatedPlayers } });
+        }, 500);
+      },
+
       placeCards: (arrangement) => {
-        const { state } = get();
+        const { state, soundEnabled } = get();
         if (!state) return;
         const validation = validateArrangement(arrangement);
         if (!validation.valid) return;
+
+        if (soundEnabled) playSoundPlace();
 
         const players = state.players.map((p, i) =>
           i === state.currentPlayerIndex ? { ...p, arrangement } : p
@@ -98,23 +151,20 @@ export const useGameStore = create<GameStore>()(
         const nextIdx = state.currentPlayerIndex + 1;
 
         if (nextIdx >= state.players.length) {
-          // All players have arranged — reveal and score
           get().revealAndScore();
           return;
         }
 
-        // Skip AI (already arranged)
-        const nextPlayer = state.players[nextIdx];
+        const nextP = state.players[nextIdx];
         set({ state: { ...state, currentPlayerIndex: nextIdx, timer: TIMER_DURATION } });
 
-        if (nextPlayer.isAI) {
-          // AI already arranged, skip to next
+        if (nextP.isAI) {
           setTimeout(() => get().nextPlayer(), 300);
         }
       },
 
       revealAndScore: () => {
-        const { state, stats, unlockedAchievements } = get();
+        const { state, stats, unlockedAchievements, soundEnabled } = get();
         if (!state) return;
 
         const scores = calculateRoundScores(state.players);
@@ -124,27 +174,53 @@ export const useGameStore = create<GameStore>()(
           totalScore: p.totalScore + scores[i],
         }));
 
+        // Check match winner (first to targetScore)
+        let matchWinner: number | null = null;
+        let phase: GameState['phase'] = 'scoring';
+        for (let i = 0; i < players.length; i++) {
+          if (players[i].totalScore >= state.targetScore) {
+            if (matchWinner === null || players[i].totalScore > players[matchWinner].totalScore) {
+              matchWinner = i;
+            }
+          }
+        }
+        if (matchWinner !== null) {
+          phase = 'match-over';
+        }
+
         // Update stats
         const newStats = { ...stats };
         newStats.totalRounds++;
         const humanIdx = players.findIndex((p) => !p.isAI);
         if (humanIdx >= 0 && scores[humanIdx] > 0) newStats.roundsWon++;
         if (humanIdx >= 0 && scores[humanIdx] > newStats.bestRoundScore) newStats.bestRoundScore = scores[humanIdx];
-        // Check for special hands
+
+        if (matchWinner !== null) {
+          newStats.gamesPlayed++;
+          if (humanIdx >= 0 && matchWinner === humanIdx) {
+            newStats.gamesWon++;
+            if (soundEnabled) playSoundWin();
+          } else {
+            if (soundEnabled) playSoundLose();
+          }
+        } else {
+          if (soundEnabled) playSoundScore();
+        }
+
         for (const p of players) {
           if (p.isAI || !p.arrangement) continue;
           const botEval = evaluateHand5(p.arrangement.bottom);
           if (botEval.rank === 'royal-flush') newStats.royalFlushes++;
           else if (botEval.rank === 'straight-flush') newStats.straightFlushes++;
           else if (botEval.rank === 'four-of-a-kind') newStats.fourOfAKinds++;
-          if (scores[p.id] >= 6) newStats.scoops++; // scoop = +6 (3 wins + 3 bonus)
+          if (scores[p.id] >= 6) newStats.scoops++;
         }
 
         const newAchs = checkNewAchievements(newStats, unlockedAchievements);
         const unlocked = [...unlockedAchievements, ...newAchs.map((a) => a.id)];
 
         set({
-          state: { ...state, players, phase: 'scoring', lastRoundScores: scores },
+          state: { ...state, players, phase, lastRoundScores: scores, matchWinner },
           stats: newStats,
           unlockedAchievements: unlocked,
           newAchievement: newAchs.length > 0 ? newAchs[0].id : null,
@@ -157,7 +233,6 @@ export const useGameStore = create<GameStore>()(
         const current = state.players[state.currentPlayerIndex];
         if (current.isAI) return;
         if (state.timer <= 1) {
-          // Time's up — auto-arrange
           get().autoArrange();
           get().nextPlayer();
         } else {
@@ -167,11 +242,12 @@ export const useGameStore = create<GameStore>()(
 
       dismissAchievement: () => set({ newAchievement: null }),
       resetStats: () => set({ stats: { ...defaultStats }, unlockedAchievements: [] }),
+      toggleSound: () => set({ soundEnabled: !get().soundEnabled }),
     }),
     {
       name: 'capsa-susun-store',
       storage: createJSONStorage(() => AsyncStorage),
-      partialize: (s) => ({ stats: s.stats, unlockedAchievements: s.unlockedAchievements }),
+      partialize: (s) => ({ stats: s.stats, unlockedAchievements: s.unlockedAchievements, soundEnabled: s.soundEnabled }),
     },
   ),
 );

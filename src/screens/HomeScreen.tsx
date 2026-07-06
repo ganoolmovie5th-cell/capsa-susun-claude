@@ -2,21 +2,21 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useGameStore } from '../store/gameStore';
-import { THEME } from '../core/types';
+import { THEME, TARGET_SCORE_OPTIONS } from '../core/types';
 
 interface Props { onStart: () => void; onStats: () => void; }
 
 export default function HomeScreen({ onStart, onStats }: Props) {
   const insets = useSafeAreaInsets();
-  const { newGame } = useGameStore();
+  const { newGame, soundEnabled, toggleSound } = useGameStore();
   const [playerCount, setPlayerCount] = useState(2);
   const [aiCount, setAiCount] = useState(1);
+  const [targetScore, setTargetScore] = useState<number>(15);
 
-  const total = playerCount;
   const humanCount = playerCount - aiCount;
 
   const handleStart = () => {
-    newGame(playerCount, aiCount);
+    newGame(playerCount, aiCount, targetScore);
     onStart();
   };
 
@@ -54,8 +54,23 @@ export default function HomeScreen({ onStart, onStats }: Props) {
           ))}
         </View>
 
+        <Text style={styles.sectionLabel}>Target Skor (First to X)</Text>
+        <View style={styles.chipRow}>
+          {TARGET_SCORE_OPTIONS.map((n) => (
+            <TouchableOpacity
+              key={n}
+              style={[styles.chip, targetScore === n && styles.chipActive]}
+              onPress={() => setTargetScore(n)}
+              accessibilityRole="button"
+            >
+              <Text style={[styles.chipText, targetScore === n && styles.chipTextActive]}>{n}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
         <View style={styles.infoCard}>
           <Text style={styles.infoText}>👤 {humanCount} Manusia · 🤖 {aiCount} Bot</Text>
+          <Text style={styles.infoText}>🏆 Pertama sampai {targetScore} poin menang</Text>
           <Text style={styles.infoText}>⏱ 60 detik per giliran</Text>
         </View>
 
@@ -63,9 +78,14 @@ export default function HomeScreen({ onStart, onStats }: Props) {
           <Text style={styles.startText}>♠ Mulai Bermain</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.statsBtn} onPress={onStats} accessibilityRole="button" accessibilityLabel="Lihat statistik">
-          <Text style={styles.statsBtnText}>📊 Statistik & Achievements</Text>
-        </TouchableOpacity>
+        <View style={styles.bottomRow}>
+          <TouchableOpacity style={styles.secondaryBtn} onPress={onStats} accessibilityRole="button" accessibilityLabel="Lihat statistik">
+            <Text style={styles.secondaryBtnText}>📊 Statistik</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.secondaryBtn} onPress={toggleSound} accessibilityRole="button" accessibilityLabel="Toggle suara">
+            <Text style={styles.secondaryBtnText}>{soundEnabled ? '🔊 Suara' : '🔇 Mute'}</Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -75,17 +95,18 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: THEME.bg },
   scroll: { padding: 24, alignItems: 'center' },
   title: { fontSize: 32, fontWeight: '800', color: THEME.gold, marginTop: 32 },
-  subtitle: { fontSize: 14, color: THEME.textMuted, marginBottom: 32 },
-  sectionLabel: { fontSize: 13, fontWeight: '700', color: THEME.textMuted, alignSelf: 'flex-start', marginBottom: 10, marginTop: 20, textTransform: 'uppercase', letterSpacing: 1 },
-  chipRow: { flexDirection: 'row', gap: 12, width: '100%' },
-  chip: { flex: 1, paddingVertical: 14, borderRadius: 12, backgroundColor: THEME.surface, alignItems: 'center', borderWidth: 1, borderColor: THEME.border },
+  subtitle: { fontSize: 14, color: THEME.textMuted, marginBottom: 28 },
+  sectionLabel: { fontSize: 13, fontWeight: '700', color: THEME.textMuted, alignSelf: 'flex-start', marginBottom: 10, marginTop: 18, textTransform: 'uppercase', letterSpacing: 1 },
+  chipRow: { flexDirection: 'row', gap: 10, width: '100%' },
+  chip: { flex: 1, paddingVertical: 12, borderRadius: 10, backgroundColor: THEME.surface, alignItems: 'center', borderWidth: 1, borderColor: THEME.border },
   chipActive: { borderColor: THEME.gold, backgroundColor: 'rgba(212,175,55,0.15)' },
-  chipText: { fontSize: 20, fontWeight: '700', color: THEME.textMuted },
+  chipText: { fontSize: 18, fontWeight: '700', color: THEME.textMuted },
   chipTextActive: { color: THEME.gold },
-  infoCard: { marginTop: 24, padding: 16, backgroundColor: THEME.surface, borderRadius: 14, width: '100%', borderWidth: 1, borderColor: THEME.border, alignItems: 'center', gap: 6 },
+  infoCard: { marginTop: 20, padding: 16, backgroundColor: THEME.surface, borderRadius: 14, width: '100%', borderWidth: 1, borderColor: THEME.border, alignItems: 'center', gap: 6 },
   infoText: { fontSize: 14, color: THEME.text },
-  startBtn: { marginTop: 32, backgroundColor: THEME.gold, paddingVertical: 16, borderRadius: 14, width: '100%', alignItems: 'center' },
+  startBtn: { marginTop: 28, backgroundColor: THEME.gold, paddingVertical: 16, borderRadius: 14, width: '100%', alignItems: 'center' },
   startText: { fontSize: 18, fontWeight: '800', color: THEME.bg },
-  statsBtn: { marginTop: 16, paddingVertical: 12 },
-  statsBtnText: { color: THEME.gold, fontWeight: '600', fontSize: 15 },
+  bottomRow: { flexDirection: 'row', gap: 12, marginTop: 16, width: '100%' },
+  secondaryBtn: { flex: 1, paddingVertical: 12, backgroundColor: THEME.surface, borderRadius: 10, alignItems: 'center', borderWidth: 1, borderColor: THEME.border },
+  secondaryBtnText: { color: THEME.gold, fontWeight: '600', fontSize: 14 },
 });
