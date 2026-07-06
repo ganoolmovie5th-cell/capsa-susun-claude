@@ -56,6 +56,8 @@ export interface GameState {
   lastRoundScores: number[];
   targetScore: number; // first to X points wins the match
   matchWinner: number | null; // player index or null
+  aiDifficulty: AIDifficulty;
+  rowComparison: RowComparison | null; // populated after scoring
 }
 
 export const TARGET_SCORE_OPTIONS = [10, 15, 20, 30] as const;
@@ -79,3 +81,21 @@ export const THEME = {
 } as const;
 
 export const TIMER_DURATION = 60; // seconds per turn
+
+export type AIDifficulty = 'easy' | 'medium' | 'hard' | 'dewa';
+export const AI_DIFFICULTY_OPTIONS: AIDifficulty[] = ['easy', 'medium', 'hard', 'dewa'];
+export const AI_DIFFICULTY_LABELS: Record<AIDifficulty, string> = {
+  easy: 'Easy 🟢',
+  medium: 'Medium 🟡',
+  hard: 'Hard 🔴',
+  dewa: 'Dewa 💀',
+};
+
+/** Per-row comparison results for reveal UI */
+export interface RowComparison {
+  /** rowResults[playerIdx][opponentIdx] = 1 (win), -1 (lose), 0 (tie) */
+  top: number[][];
+  middle: number[][];
+  bottom: number[][];
+}
+

@@ -1,9 +1,9 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { GameState, Player, PlayerArrangement, TIMER_DURATION } from '../core/types';
+import { GameState, Player, PlayerArrangement, TIMER_DURATION, AIDifficulty } from '../core/types';
 import { deal } from '../core/deck';
-import { calculateRoundScores } from '../core/scoring';
+import { calculateRoundScores, computeRowComparison } from '../core/scoring';
 import { validateArrangement } from '../core/validation';
 import { findBestArrangement } from '../core/ai';
 import { Stats, defaultStats, checkNewAchievements } from '../core/achievements';
@@ -17,7 +17,7 @@ interface GameStore {
   newAchievement: string | null;
   soundEnabled: boolean;
   // Actions
-  newGame: (playerCount: number, aiCount: number, targetScore?: number) => void;
+  newGame: (playerCount: number, aiCount: number, targetScore?: number, aiDifficulty?: AIDifficulty) => void;
   nextRound: () => void;
   placeCards: (arrangement: PlayerArrangement) => void;
   autoArrange: () => void;
@@ -38,7 +38,7 @@ export const useGameStore = create<GameStore>()(
       newAchievement: null,
       soundEnabled: true,
 
-      newGame: (playerCount, aiCount, targetScore = 15) => {
+      newGame: (playerCount, aiCount, targetScore = 15, aiDifficulty = 'hard') => {
         const humanCount = playerCount - aiCount;
         const players: Player[] = [];
         for (let i = 0; i < humanCount; i++) {
@@ -63,6 +63,8 @@ export const useGameStore = create<GameStore>()(
             lastRoundScores: [],
             targetScore,
             matchWinner: null,
+            aiDifficulty,
+            rowComparison: null,
           },
         });
 
@@ -72,7 +74,7 @@ export const useGameStore = create<GameStore>()(
           if (!state) return;
           const updatedPlayers = state.players.map((p) => {
             if (p.isAI && !p.arrangement) {
-              return { ...p, arrangement: findBestArrangement(p.hand) };
+              return { ...p, arrangement: findBestArrangement(p.hand, state.aiDifficulty) };
             }
             return p;
           });
@@ -105,6 +107,7 @@ export const useGameStore = create<GameStore>()(
             timer: TIMER_DURATION,
             lastRoundScores: [],
             matchWinner: null,
+            rowComparison: null,
           },
         });
 
@@ -114,7 +117,7 @@ export const useGameStore = create<GameStore>()(
           if (!s) return;
           const updatedPlayers = s.players.map((p) => {
             if (p.isAI && !p.arrangement) {
-              return { ...p, arrangement: findBestArrangement(p.hand) };
+              return { ...p, arrangement: findBestArrangement(p.hand, s.aiDifficulty) };
             }
             return p;
           });
@@ -220,7 +223,7 @@ export const useGameStore = create<GameStore>()(
         const unlocked = [...unlockedAchievements, ...newAchs.map((a) => a.id)];
 
         set({
-          state: { ...state, players, phase, lastRoundScores: scores, matchWinner },
+          state: { ...state, players, phase, lastRoundScores: scores, matchWinner, rowComparison: computeRowComparison(players) },
           stats: newStats,
           unlockedAchievements: unlocked,
           newAchievement: newAchs.length > 0 ? newAchs[0].id : null,

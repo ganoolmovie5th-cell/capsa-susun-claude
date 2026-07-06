@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useGameStore } from '../store/gameStore';
-import { THEME, TARGET_SCORE_OPTIONS } from '../core/types';
+import { THEME, TARGET_SCORE_OPTIONS, AIDifficulty, AI_DIFFICULTY_OPTIONS, AI_DIFFICULTY_LABELS } from '../core/types';
 
 interface Props { onStart: () => void; onStats: () => void; }
 
@@ -12,11 +12,12 @@ export default function HomeScreen({ onStart, onStats }: Props) {
   const [playerCount, setPlayerCount] = useState(2);
   const [aiCount, setAiCount] = useState(1);
   const [targetScore, setTargetScore] = useState<number>(15);
+  const [aiDifficulty, setAiDifficulty] = useState<AIDifficulty>('hard');
 
   const humanCount = playerCount - aiCount;
 
   const handleStart = () => {
-    newGame(playerCount, aiCount, targetScore);
+    newGame(playerCount, aiCount, targetScore, aiDifficulty);
     onStart();
   };
 
@@ -64,6 +65,20 @@ export default function HomeScreen({ onStart, onStats }: Props) {
               accessibilityRole="button"
             >
               <Text style={[styles.chipText, targetScore === n && styles.chipTextActive]}>{n}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        <Text style={styles.sectionLabel}>Level Bot AI</Text>
+        <View style={styles.chipRow}>
+          {AI_DIFFICULTY_OPTIONS.map((d) => (
+            <TouchableOpacity
+              key={d}
+              style={[styles.chip, aiDifficulty === d && styles.chipActive]}
+              onPress={() => setAiDifficulty(d)}
+              accessibilityRole="button"
+            >
+              <Text style={[styles.chipText, { fontSize: 12 }, aiDifficulty === d && styles.chipTextActive]}>{AI_DIFFICULTY_LABELS[d]}</Text>
             </TouchableOpacity>
           ))}
         </View>

@@ -1,5 +1,5 @@
 // Scoring system for capsa susun. Pure functions.
-import { PlayerArrangement, Player } from './types';
+import { PlayerArrangement, Player, RowComparison } from './types';
 import { evaluateHand3, evaluateHand5, compareEvaluations } from './poker';
 
 interface RowResult {
@@ -73,4 +73,33 @@ export function calculateRoundScores(players: Player[]): number[] {
   }
 
   return scores;
+}
+
+/** Compute per-row win/lose/tie matrix for UI indicators. */
+export function computeRowComparison(players: Player[]): RowComparison {
+  const n = players.length;
+  const make2D = () => Array.from({ length: n }, () => new Array(n).fill(0));
+  const result: RowComparison = { top: make2D(), middle: make2D(), bottom: make2D() };
+
+  for (let i = 0; i < n; i++) {
+    for (let j = i + 1; j < n; j++) {
+      const a = players[i].arrangement;
+      const b = players[j].arrangement;
+      if (!a || !b) continue;
+
+      const topCmp = compareEvaluations(evaluateHand3(a.top), evaluateHand3(b.top));
+      result.top[i][j] = topCmp > 0 ? 1 : topCmp < 0 ? -1 : 0;
+      result.top[j][i] = -result.top[i][j];
+
+      const midCmp = compareEvaluations(evaluateHand5(a.middle), evaluateHand5(b.middle));
+      result.middle[i][j] = midCmp > 0 ? 1 : midCmp < 0 ? -1 : 0;
+      result.middle[j][i] = -result.middle[i][j];
+
+      const botCmp = compareEvaluations(evaluateHand5(a.bottom), evaluateHand5(b.bottom));
+      result.bottom[i][j] = botCmp > 0 ? 1 : botCmp < 0 ? -1 : 0;
+      result.bottom[j][i] = -result.bottom[i][j];
+    }
+  }
+
+  return result;
 }

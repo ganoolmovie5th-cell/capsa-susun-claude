@@ -5,6 +5,7 @@ import * as Haptics from 'expo-haptics';
 import { useGameStore } from '../store/gameStore';
 import { THEME, Card, PlayerArrangement, RowType } from '../core/types';
 import { cardDisplay, isRed } from '../core/deck';
+import { evaluateHand3, evaluateHand5 } from '../core/poker';
 import DraggableCard from '../components/DraggableCard';
 import DropRow from '../components/DropRow';
 import FlipCard from '../components/FlipCard';
@@ -226,43 +227,63 @@ export default function GameScreen({ onBack }: Props) {
               {state.phase === 'match-over' ? '🏆 Pertandingan Selesai!' : `Hasil Ronde ${state.roundNumber}`}
             </Text>
 
-            {/* Player arrangements with flip cards */}
-            {state.players.map((p, idx) => (
-              <View key={p.id} style={styles.revealPlayer}>
-                <View style={styles.revealHeader}>
-                  <Text style={styles.revealName}>{p.name}{p.isAI ? ' 🤖' : ''}</Text>
-                  <Text style={[
-                    styles.revealScore,
-                    state.lastRoundScores[idx] > 0 && styles.scorePositive,
-                    state.lastRoundScores[idx] < 0 && styles.scoreNegative,
-                  ]}>
-                    {state.lastRoundScores[idx] >= 0 ? '+' : ''}{state.lastRoundScores[idx]}
-                  </Text>
-                </View>
-                {p.arrangement && (
-                  <View style={styles.revealRows}>
-                    <View style={styles.revealRow}>
-                      <Text style={styles.revealRowLabel}>A</Text>
-                      {p.arrangement.top.map((c, ci) => (
-                        <FlipCard key={c.id} card={c} faceUp={revealCards} delay={idx * 200 + ci * 80} size="sm" />
-                      ))}
-                    </View>
-                    <View style={styles.revealRow}>
-                      <Text style={styles.revealRowLabel}>T</Text>
-                      {p.arrangement.middle.map((c, ci) => (
-                        <FlipCard key={c.id} card={c} faceUp={revealCards} delay={idx * 200 + 250 + ci * 80} size="sm" />
-                      ))}
-                    </View>
-                    <View style={styles.revealRow}>
-                      <Text style={styles.revealRowLabel}>B</Text>
-                      {p.arrangement.bottom.map((c, ci) => (
-                        <FlipCard key={c.id} card={c} faceUp={revealCards} delay={idx * 200 + 500 + ci * 80} size="sm" />
-                      ))}
-                    </View>
+            {/* Player arrangements with flip cards + row comparison */}
+            {state.players.map((p, idx) => {
+              // Compute row results for this player (vs all others)
+              const rc = state.rowComparison;
+              const rowWins = (row: 'top' | 'middle' | 'bottom') => {
+                if (!rc) return 0;
+                return rc[row][idx].reduce((sum, v) => sum + (v > 0 ? 1 : 0), 0);
+              };
+              const rowLosses = (row: 'top' | 'middle' | 'bottom') => {
+                if (!rc) return 0;
+                return rc[row][idx].reduce((sum, v) => sum + (v < 0 ? 1 : 0), 0);
+              };
+              const rowIndicator = (row: 'top' | 'middle' | 'bottom') => {
+                const w = rowWins(row);
+                const l = rowLosses(row);
+                if (w > l) return { text: `W${w}`, color: THEME.accent };
+                if (l > w) return { text: `L${l}`, color: THEME.danger };
+                return { text: 'T', color: THEME.textMuted };
+              };
+
+              return (
+                <View key={p.id} style={styles.revealPlayer}>
+                  <View style={styles.revealHeader}>
+                    <Text style={styles.revealName}>{p.name}{p.isAI ? ' 🤖' : ''}</Text>
+                    <Text style={[
+                      styles.revealScore,
+                      state.lastRoundScores[idx] > 0 && styles.scorePositive,
+                      state.lastRoundScores[idx] < 0 && styles.scoreNegative,
+                    ]}>
+                      {state.lastRoundScores[idx] >= 0 ? '+' : ''}{state.lastRoundScores[idx]}
+                    </Text>
                   </View>
-                )}
-              </View>
-            ))}
+                  {p.arrangement && (
+                    <View style={styles.revealRows}>
+                      {(['top', 'middle', 'bottom'] as const).map((row) => {
+                        const cards = row === 'top' ? p.arrangement!.top : row === 'middle' ? p.arrangement!.middle : p.arrangement!.bottom;
+                        const label = row === 'top' ? 'A' : row === 'middle' ? 'T' : 'B';
+                        const delayBase = row === 'top' ? 0 : row === 'middle' ? 250 : 500;
+                        const indicator = rowIndicator(row);
+                        const handEval = row === 'top' ? evaluateHand3(cards) : evaluateHand5(cards);
+                        return (
+                          <View key={row} style={styles.revealRow}>
+                            <Text style={styles.revealRowLabel}>{label}</Text>
+                            {cards.map((c, ci) => (
+                              <FlipCard key={c.id} card={c} faceUp={revealCards} delay={idx * 200 + delayBase + ci * 80} size="sm" />
+                            ))}
+                            <View style={[styles.rowBadge, { backgroundColor: indicator.color + '22', borderColor: indicator.color }]}>
+                              <Text style={[styles.rowBadgeText, { color: indicator.color }]}>{indicator.text}</Text>
+                            </View>
+                          </View>
+                        );
+                      })}
+                    </View>
+                  )}
+                </View>
+              );
+            })}
 
             {/* Match winner */}
             {state.phase === 'match-over' && state.matchWinner !== null && (
@@ -334,6 +355,8 @@ const styles = StyleSheet.create({
   revealRows: { gap: 6 },
   revealRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   revealRowLabel: { width: 16, fontSize: 10, fontWeight: '700', color: THEME.textMuted, textAlign: 'center' },
+  rowBadge: { marginLeft: 6, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, borderWidth: 1 },
+  rowBadgeText: { fontSize: 10, fontWeight: '800' },
   winnerBanner: { marginTop: 16, padding: 20, backgroundColor: 'rgba(212,175,55,0.12)', borderRadius: 16, borderWidth: 1, borderColor: THEME.gold, alignItems: 'center' },
   winnerText: { fontSize: 22, fontWeight: '800', color: THEME.gold },
   winnerSub: { fontSize: 13, color: THEME.textMuted, marginTop: 4 },
