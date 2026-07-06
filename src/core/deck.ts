@@ -37,7 +37,7 @@ export function deal(playerCount: number): Card[][] {
 }
 
 export function cardDisplay(card: Card): string {
-  const v = VALUE_CHAR[card.value];
+  const v = card.value === 10 ? '10' : VALUE_CHAR[card.value];
   const s = card.suit === 'spades' ? '♠' : card.suit === 'hearts' ? '♥' : card.suit === 'diamonds' ? '♦' : '♣';
   return `${v}${s}`;
 }
