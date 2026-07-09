@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { GameState, Player, PlayerArrangement, AIDifficulty } from '../core/types';
+import { GameState, Player, PlayerArrangement, AIDifficulty, HandHistoryEntry } from '../core/types';
 import { deal } from '../core/deck';
 import { calculateRoundScores, computeRowComparison } from '../core/scoring';
 import { validateArrangement } from '../core/validation';
@@ -16,6 +16,7 @@ interface GameStore {
   unlockedAchievements: string[];
   newAchievement: string | null;
   soundEnabled: boolean;
+  handHistory: HandHistoryEntry[];
   // Actions
   newGame: (playerCount: number, aiCount: number, targetScore?: number, aiDifficulty?: AIDifficulty, timerDuration?: number) => void;
   nextRound: () => void;
@@ -37,6 +38,7 @@ export const useGameStore = create<GameStore>()(
       unlockedAchievements: [],
       newAchievement: null,
       soundEnabled: true,
+      handHistory: [],
 
       newGame: (playerCount, aiCount, targetScore = 15, aiDifficulty = 'hard', timerDuration = 60) => {
         const humanCount = playerCount - aiCount;
@@ -224,11 +226,24 @@ export const useGameStore = create<GameStore>()(
         const newAchs = checkNewAchievements(newStats, unlockedAchievements);
         const unlocked = [...unlockedAchievements, ...newAchs.map((a) => a.id)];
 
+        // Push hand history entry (keep last 20)
+        const historyEntry: HandHistoryEntry = {
+          roundNumber: state.roundNumber,
+          players: players.map((p, i) => ({
+            name: p.name,
+            arrangement: p.arrangement,
+            score: scores[i],
+          })),
+          date: Date.now(),
+        };
+        const updatedHistory = [...get().handHistory, historyEntry].slice(-20);
+
         set({
           state: { ...state, players, phase, lastRoundScores: scores, matchWinner, rowComparison: computeRowComparison(players) },
           stats: newStats,
           unlockedAchievements: unlocked,
           newAchievement: newAchs.length > 0 ? newAchs[0].id : null,
+          handHistory: updatedHistory,
         });
       },
 
@@ -252,7 +267,7 @@ export const useGameStore = create<GameStore>()(
     {
       name: 'capsa-susun-store',
       storage: createJSONStorage(() => AsyncStorage),
-      partialize: (s) => ({ stats: s.stats, unlockedAchievements: s.unlockedAchievements, soundEnabled: s.soundEnabled }),
+      partialize: (s) => ({ stats: s.stats, unlockedAchievements: s.unlockedAchievements, soundEnabled: s.soundEnabled, handHistory: s.handHistory }),
     },
   ),
 );

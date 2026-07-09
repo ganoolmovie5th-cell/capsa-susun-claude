@@ -5,9 +5,9 @@ import { useGameStore } from '../store/gameStore';
 import { THEME } from '../core/types';
 import { ACHIEVEMENTS } from '../core/achievements';
 
-interface Props { onBack: () => void; }
+interface Props { onBack: () => void; onHandHistory: () => void; }
 
-export default function StatsScreen({ onBack }: Props) {
+export default function StatsScreen({ onBack, onHandHistory }: Props) {
   const insets = useSafeAreaInsets();
   const { stats, unlockedAchievements } = useGameStore();
   const winRate = stats.gamesPlayed > 0 ? Math.round((stats.gamesWon / stats.gamesPlayed) * 100) : 0;
@@ -22,6 +22,11 @@ export default function StatsScreen({ onBack }: Props) {
           <Text style={styles.title}>Statistik</Text>
           <View style={{ width: 60 }} />
         </View>
+
+        {/* Hand history link */}
+        <TouchableOpacity onPress={onHandHistory} style={styles.historyBtn} accessibilityRole="button" accessibilityLabel="Riwayat tangan">
+          <Text style={styles.historyBtnText}>📜 Riwayat Tangan</Text>
+        </TouchableOpacity>
 
         {/* Stats grid */}
         <View style={styles.statsGrid}>
@@ -68,6 +73,8 @@ const styles = StyleSheet.create({
   backBtn: { paddingVertical: 8, paddingHorizontal: 12, backgroundColor: THEME.surface, borderRadius: 8 },
   backText: { color: THEME.textMuted, fontWeight: '600', fontSize: 13 },
   title: { fontSize: 18, fontWeight: '800', color: THEME.gold },
+  historyBtn: { marginBottom: 16, paddingVertical: 12, backgroundColor: THEME.surface, borderRadius: 10, alignItems: 'center', borderWidth: 1, borderColor: THEME.border },
+  historyBtnText: { color: THEME.gold, fontWeight: '600', fontSize: 14 },
   statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 24 },
   statCard: { flex: 1, minWidth: '45%', backgroundColor: THEME.surface, borderRadius: 14, padding: 16, alignItems: 'center', borderWidth: 1, borderColor: THEME.border },
   statValue: { fontSize: 24, fontWeight: '800', color: THEME.gold },

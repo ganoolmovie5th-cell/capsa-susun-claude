@@ -6,7 +6,7 @@ import Animated, { useSharedValue, useAnimatedStyle, runOnJS } from 'react-nativ
 import { useGameStore } from '../store/gameStore';
 import { THEME, TIMER_OPTIONS, AIDifficulty, AI_DIFFICULTY_OPTIONS, AI_DIFFICULTY_LABELS } from '../core/types';
 
-interface Props { onStart: () => void; onStats: () => void; }
+interface Props { onStart: () => void; onStats: () => void; onSpectator: () => void; onHandHistory: () => void; }
 
 const { width: SCREEN_W } = Dimensions.get('window');
 const SLIDER_W = SCREEN_W - 80; // padding 40 each side
@@ -75,7 +75,7 @@ const sliderStyles = StyleSheet.create({
   valueText: { fontSize: 13, fontWeight: '800', color: THEME.gold },
 });
 
-export default function HomeScreen({ onStart, onStats }: Props) {
+export default function HomeScreen({ onStart, onStats, onSpectator, onHandHistory }: Props) {
   const insets = useSafeAreaInsets();
   const { newGame, soundEnabled, toggleSound } = useGameStore();
   const [playerCount, setPlayerCount] = useState(2);
@@ -210,6 +210,16 @@ export default function HomeScreen({ onStart, onStats }: Props) {
           <TouchableOpacity style={styles.iconBtn} onPress={toggleSound} accessibilityRole="button" accessibilityLabel="Toggle suara">
             <Text style={styles.iconBtnEmoji}>{soundEnabled ? '🔊' : '🔇'}</Text>
             <Text style={styles.iconBtnText}>{soundEnabled ? 'Suara' : 'Mute'}</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.bottomRow}>
+          <TouchableOpacity style={styles.iconBtn} onPress={onSpectator} accessibilityRole="button" accessibilityLabel="Mode penonton">
+            <Text style={styles.iconBtnEmoji}>👁️</Text>
+            <Text style={styles.iconBtnText}>Spectator</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.iconBtn} onPress={onHandHistory} accessibilityRole="button" accessibilityLabel="Riwayat tangan">
+            <Text style={styles.iconBtnEmoji}>📜</Text>
+            <Text style={styles.iconBtnText}>Riwayat</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

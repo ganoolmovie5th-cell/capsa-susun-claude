@@ -101,3 +101,14 @@ export interface RowComparison {
   bottom: number[][];
 }
 
+/** Hand history entry stored after each round */
+export interface HandHistoryEntry {
+  roundNumber: number;
+  players: {
+    name: string;
+    arrangement: PlayerArrangement | null;
+    score: number;
+  }[];
+  date: number; // timestamp
+}
+

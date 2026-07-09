@@ -87,6 +87,20 @@ Type: `feat` `fix` `refactor` `test` `chore` `docs`
 
 ## Fitur Baru (Juli 2026)
 
+### Spectator Mode
+- `src/screens/SpectatorScreen.tsx`: 4 bot AI bermain otomatis, user menonton
+- Speed toggle: Cepat (1s delay), Normal (2s), Lambat (3s)
+- Semua kartu ditampilkan face-up saat reveal/scoring
+- Auto-restart match baru setelah selesai
+- Tombol "👁️ Spectator" di HomeScreen
+
+### Hand History
+- `HandHistoryEntry` type ditambah ke `src/core/types.ts`
+- `handHistory: HandHistoryEntry[]` di-persist di store (max 20 entries)
+- Setelah `revealAndScore()`, snapshot arrangement + skor di-push
+- `src/screens/HandHistoryScreen.tsx`: FlatList ronde terakhir, format kartu compact + hand rank
+- Accessible dari HomeScreen ("📜 Riwayat") dan StatsScreen
+
 ### Drag-and-drop kartu
 - `src/components/DraggableCard.tsx`: Pan gesture (react-native-gesture-handler) + spring animation (reanimated)
 - Drop zones (`DropRow.tsx`) report Y position via `measureInWindow`
@@ -147,5 +161,6 @@ Type: `feat` `fix` `refactor` `test` `chore` `docs`
 - [x] Visual poker hand labels di setiap baris
 - [x] Multi-round game (first to X points)
 - [x] Sound effects + haptic feedback
+- [x] Spectator Mode (4 AI bermain otomatis, speed toggle)
+- [x] Hand History (rekam 20 ronde terakhir + UI replay)
 - [ ] Online multiplayer (Supabase)
-- [ ] Spectator mode (0 human, 4 AI)

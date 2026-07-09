@@ -21,6 +21,8 @@ Game kartu Capsa Susun klasik untuk mobile. Susun 13 kartu menjadi 3 baris (3-5-
 - **12 Achievements** — milestone badges
 - **Casino theme** — dark green felt, gold accents, card shadows
 - **Save progress** — stats & achievements tersimpan (AsyncStorage)
+- **👁️ Spectator Mode** — tonton 4 bot bermain otomatis, speed toggle (Cepat/Normal/Lambat)
+- **📜 Hand History** — rekam 20 ronde terakhir, tampilkan arrangement + skor per pemain
 
 ## Tech Stack
 
