@@ -2,14 +2,8 @@
 import { PlayerArrangement, Player, RowComparison } from './types';
 import { evaluateHand3, evaluateHand5, compareEvaluations } from './poker';
 
-interface RowResult {
-  winner: number; // player index who won this row
-  loser: number;
-  tie: boolean;
-}
-
 /** Compare two players' arrangements and return scores. */
-export function compareArrangements(a: PlayerArrangement, b: PlayerArrangement): { aScore: number; bScore: number } {
+function compareArrangements(a: PlayerArrangement, b: PlayerArrangement): { aScore: number; bScore: number } {
   const aTop = evaluateHand3(a.top);
   const bTop = evaluateHand3(b.top);
   const aMid = evaluateHand5(a.middle);

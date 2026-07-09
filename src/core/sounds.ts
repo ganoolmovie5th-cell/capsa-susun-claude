@@ -13,8 +13,6 @@ let initialized = false;
 // Expo-av can load from URI or require(). For Expo Go without prebuild,
 // we'll use haptics as primary feedback and Audio only for dealt/flip effect.
 
-const soundRefs: Partial<Record<SoundName, Audio.Sound>> = {};
-
 function createWavBuffer(frequency: number, duration: number, volume: number = 0.5): string {
   const sampleRate = 8000;
   const numSamples = Math.floor(sampleRate * duration);

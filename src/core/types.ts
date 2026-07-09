@@ -61,8 +61,6 @@ export interface GameState {
   rowComparison: RowComparison | null; // populated after scoring
 }
 
-export const TARGET_SCORE_OPTIONS = [10, 15, 20, 30] as const; // kept for reference
-
 // Theme colors
 export const THEME = {
   bg: '#0a1f14',
@@ -81,7 +79,6 @@ export const THEME = {
   border: '#2d6b4a',
 } as const;
 
-export const TIMER_DURATION = 60; // default seconds per turn
 export const TIMER_OPTIONS = [30, 45, 60, 90, 120] as const;
 
 export type AIDifficulty = 'easy' | 'medium' | 'hard' | 'dewa';

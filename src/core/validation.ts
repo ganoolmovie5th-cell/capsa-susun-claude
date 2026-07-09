@@ -30,8 +30,4 @@ export function validateArrangement(arr: PlayerArrangement): { valid: boolean; e
   return { valid: true };
 }
 
-/** Check if all 13 cards are used exactly once. */
-export function isComplete(arr: PlayerArrangement): boolean {
-  const ids = new Set([...arr.top, ...arr.middle, ...arr.bottom].map((c) => c.id));
-  return ids.size === 13;
-}
+
