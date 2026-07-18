@@ -23,6 +23,7 @@ Game kartu Capsa Susun klasik untuk mobile. Susun 13 kartu menjadi 3 baris (3-5-
 - **Save progress** — stats & achievements tersimpan (AsyncStorage)
 - **👁️ Spectator Mode** — tonton 4 bot bermain otomatis, speed toggle (Cepat/Normal/Lambat)
 - **📜 Hand History** — rekam 20 ronde terakhir, tampilkan arrangement + skor per pemain
+- **♻️ Hand Replay** — putar ulang cara kartu di-arrange step-by-step (Juli 2026)
 
 ## Tech Stack
 
