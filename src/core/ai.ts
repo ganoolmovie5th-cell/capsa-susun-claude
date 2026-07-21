@@ -2,6 +2,7 @@
 import { Card, PlayerArrangement, AIDifficulty } from './types';
 import { evaluateHand5, evaluateHand3 } from './poker';
 import { validateArrangement } from './validation';
+import { shuffle } from './deck';
 
 /** Generate combinations of k items from array. */
 function combinations<T>(arr: T[], k: number): T[][] {
@@ -19,15 +20,6 @@ function combinations<T>(arr: T[], k: number): T[][] {
 }
 
 /** Shuffle array (Fisher-Yates). */
-function shuffleArr<T>(arr: T[]): T[] {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
-
 // Difficulty config: how many combinations the AI evaluates
 // Easy: random valid arrangement
 // Medium: limited search (top 5 middles per bottom, first 200 bottoms)
@@ -61,7 +53,7 @@ export function findBestArrangement(hand: Card[], difficulty: AIDifficulty = 'ha
   const allBottomCombos = combinations(hand, 5);
   // Shuffle and limit bottoms for medium
   const bottomCombos = config.maxBottoms < allBottomCombos.length
-    ? shuffleArr(allBottomCombos).slice(0, config.maxBottoms)
+    ? shuffle(allBottomCombos).slice(0, config.maxBottoms)
     : allBottomCombos;
 
   for (const bottom of bottomCombos) {
@@ -109,12 +101,12 @@ export function findBestArrangement(hand: Card[], difficulty: AIDifficulty = 'ha
 /** Easy mode: find first few valid arrangements, pick randomly. */
 function findEasyArrangement(hand: Card[], config: DifficultyConfig): PlayerArrangement {
   const valid: PlayerArrangement[] = [];
-  const bottomCombos = shuffleArr(combinations(hand, 5)).slice(0, config.maxBottoms);
+  const bottomCombos = shuffle(combinations(hand, 5)).slice(0, config.maxBottoms);
 
   for (const bottom of bottomCombos) {
     if (valid.length >= 5) break;
     const remaining8 = hand.filter((c) => !bottom.includes(c));
-    const middleCombos = shuffleArr(combinations(remaining8, 5)).slice(0, config.maxMiddles);
+    const middleCombos = shuffle(combinations(remaining8, 5)).slice(0, config.maxMiddles);
 
     for (const middle of middleCombos) {
       const top = remaining8.filter((c) => !middle.includes(c));

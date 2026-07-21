@@ -17,13 +17,13 @@ export function createDeck(): Card[] {
   return deck;
 }
 
-export function shuffle(deck: Card[]): Card[] {
-  const d = [...deck];
-  for (let i = d.length - 1; i > 0; i--) {
+export function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [d[i], d[j]] = [d[j], d[i]];
+    [a[i], a[j]] = [a[j], a[i]];
   }
-  return d;
+  return a;
 }
 
 /** Deal 13 cards to each player. */
