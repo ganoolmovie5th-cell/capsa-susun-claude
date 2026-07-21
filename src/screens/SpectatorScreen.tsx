@@ -21,7 +21,7 @@ export default function SpectatorScreen({ onBack }: Props) {
 
   // Start a spectator game on mount
   useEffect(() => {
-    newGame(4, 4, 15, 'hard', 60);
+    newGame(4, 4, 15, 'medium', 60);
     setAutoRunning(true);
     return () => {
       mountedRef.current = false;
