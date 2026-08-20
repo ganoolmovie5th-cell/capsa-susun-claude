@@ -5,3 +5,7 @@ ios/
 android/
 *.tsbuildinfo
 .DS_Store
+
+# AI IDE config
+.kiro/
+.claude/
