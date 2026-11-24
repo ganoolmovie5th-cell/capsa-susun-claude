@@ -2,7 +2,7 @@
 
 Game kartu Capsa Susun (Chinese Poker) klasik untuk mobile. Susun 13 kartu menjadi 3 baris (3-5-5) dengan aturan poker hand ranking. Main melawan AI atau teman (hot-seat).
 
-**Tech Stack:** React Native · Expo SDK 54 · TypeScript · Zustand · Reanimated · Gesture Handler
+**Tech Stack:** React Native · Expo SDK 58 · TypeScript · Zustand · Reanimated · Gesture Handler
 
 ## Features
 

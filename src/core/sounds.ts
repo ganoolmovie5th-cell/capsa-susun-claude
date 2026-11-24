@@ -1,5 +1,5 @@
-// Sound effects for Capsa Susun. Uses expo-av.
-import { Audio } from 'expo-av';
+// Sound effects for Capsa Susun. Uses expo-audio.
+import { createAudioPlayer, setAudioModeAsync } from 'expo-audio';
 
 type SoundName = 'deal' | 'place' | 'flip' | 'score' | 'win' | 'lose';
 
@@ -10,8 +10,7 @@ type SoundName = 'deal' | 'place' | 'flip' | 'score' | 'win' | 'lose';
 let initialized = false;
 
 // We use a silent approach: generate minimal WAV in-memory.
-// Expo-av can load from URI or require(). For Expo Go without prebuild,
-// we'll use haptics as primary feedback and Audio only for dealt/flip effect.
+// Haptics are the primary feedback; audio is a best-effort extra.
 
 function createWavBuffer(frequency: number, duration: number, volume: number = 0.5): string {
   const sampleRate = 8000;
@@ -71,9 +70,9 @@ async function ensureInit() {
   if (initialized) return;
   initialized = true;
   try {
-    await Audio.setAudioModeAsync({
-      playsInSilentModeIOS: false,
-      staysActiveInBackground: false,
+    await setAudioModeAsync({
+      playsInSilentMode: false,
+      shouldPlayInBackground: false,
     });
   } catch {
     // ponytail: silent fail if audio unavailable
@@ -85,16 +84,16 @@ export async function playSound(name: SoundName): Promise<void> {
     await ensureInit();
     const def = SOUND_DEFS[name];
     const base64 = createWavBuffer(def.freq, def.dur, def.vol);
-    const { sound } = await Audio.Sound.createAsync(
-      { uri: `data:audio/wav;base64,${base64}` },
-      { shouldPlay: true, volume: def.vol }
-    );
+    const player = createAudioPlayer({ uri: `data:audio/wav;base64,${base64}` });
+    player.volume = def.vol;
     // Cleanup after playback
-    sound.setOnPlaybackStatusUpdate((status) => {
-      if ('didJustFinish' in status && status.didJustFinish) {
-        sound.unloadAsync();
+    const sub = player.addListener('playbackStatusUpdate', (status) => {
+      if (status.didJustFinish) {
+        sub.remove();
+        player.remove();
       }
     });
+    player.play();
   } catch {
     // ponytail: silent fail — sound is non-critical
   }

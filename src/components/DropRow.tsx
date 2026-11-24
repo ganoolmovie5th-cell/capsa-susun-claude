@@ -1,6 +1,6 @@
 // Drop zone row for card arrangement. Shows placed cards + placeholder slots.
 import React, { useRef, useCallback } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, LayoutChangeEvent } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, LayoutChangeEvent, type HostInstance } from 'react-native';
 import { Card, THEME, RowType } from '../core/types';
 import { cardDisplay, isRed } from '../core/deck';
 import { evaluateHand3, evaluateHand5 } from '../core/poker';
@@ -30,7 +30,7 @@ const HAND_LABELS: Record<string, string> = {
 export default function DropRow({ label, type, cards, maxCards, onRemoveCard, onLayout }: Props) {
   const handleLayout = useCallback((e: LayoutChangeEvent) => {
     if (onLayout) {
-      e.target.measureInWindow((_x, y, _w, h) => {
+      (e.target as unknown as HostInstance).measureInWindow((_x, y, _w, h) => {
         onLayout(type, y, h);
       });
     }

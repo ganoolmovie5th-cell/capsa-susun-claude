@@ -6,10 +6,31 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
-    "splash": { "image": "./assets/splash.png", "resizeMode": "contain", "backgroundColor": "#0a1f14" },
-    "assetBundlePatterns": ["**/*"],
-    "ios": { "supportsTablet": true },
-    "android": { "adaptiveIcon": { "foregroundImage": "./assets/adaptive-icon.png", "backgroundColor": "#0a1f14" } },
-    "owner": "ganoolmovie5th"
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0a1f14"
+      }
+    },
+    "owner": "ganoolmovie5th",
+    "plugins": [
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#0a1f14"
+        }
+      ],
+      "expo-status-bar",
+      "expo-audio",
+      "expo-asset"
+    ]
   }
 }
